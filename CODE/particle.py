@@ -7,14 +7,16 @@ class Particle:
 
     def __init__(self, surface, pos):
         self.surface = surface
-        self.pos = pos
-        self.velocity = math.Vector2(random.uniform(-2, 2), random.uniform(-2, 2))  # Temporary
-        self.acceleration = (0.01, 0.01)
-        self.radius = 5
+        self.pos = math.Vector2(pos)
+        self.velocity = math.Vector2(random.randint(-3, 3), random.uniform(-3, 3))
+        self.acceleration = math.Vector2(0, 0)
+        self.mass = random.uniform(2.3, 3)
+        self.radius = (self.mass**2)
 
     def draw(self):
+        self.velocity += self.acceleration
         self.pos += self.velocity
-        self.pos += self.acceleration
+        self.acceleration * 0
         pygame.draw.circle(self.surface, "white", (self.pos.x, self.pos.y), self.radius, 0)
 
     def detect_window(self):
@@ -26,8 +28,27 @@ class Particle:
 
     def collision_detection(self, other):
         """Checks if a particle is colliding with another. If so it is handled so it no longer collides."""
-        distance = (pow((self.pos.x - other.pos.x), 2) + pow(self.pos.y - other.pos.y, 2))**0.5
+        impact_vector = math.Vector2.__sub__(other.pos, self.pos)
+        distance = impact_vector.magnitude()
 
-        if distance < self.radius + other.radius:  # There are better ways to handle this, but will update later
-            self.velocity *= -1
-            other.velocity *= -1
+        if distance < self.radius + other.radius:
+            # Math for collision handling w/ elastic collisions
+            overlap = distance - (self.radius + other.radius)
+            direction = impact_vector.copy() * (overlap * 0.5)
+            self.pos += direction
+            other.pos -= direction
+            # The math is wonky which is why you can see particles suddenly pop after colliding, but it'll do
+            distance = self.radius + other.radius
+
+            mass_sum = self.mass + other.mass
+            velDiff = other.velocity - self.velocity
+            # Self Particle math
+            num = velDiff.dot(impact_vector)
+            den = mass_sum * distance * distance
+            deltaVA = impact_vector.copy()
+            deltaVA *= (2 * other.mass * num / den)
+            self.velocity += deltaVA
+            # Other Particle math
+            deltaVB = impact_vector.copy()
+            deltaVB *= (-2 * self.mass * num / den)
+            other.velocity += deltaVB

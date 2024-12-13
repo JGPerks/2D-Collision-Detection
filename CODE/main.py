@@ -17,8 +17,8 @@ running = True
 
 particle = [0] * 100
 # Initialize 100 particles with random (x, y) vector within the bounds of the window
-for i in range(len(particle)-1):
-    vector = math.Vector2(random.randint(0, width), random.randint(0, height))
+for i in range(len(particle)):
+    vector = math.Vector2(i*100 % width, (i*150 % height))  # Using % to equally space particles upon creation
     particle[i] = Particle(screen, vector)
 
 while running:
@@ -32,11 +32,11 @@ while running:
     screen.fill("black")
 
     # RENDER / Game Loop
-    for i in range(len(particle)-1):
+    for i in range(len(particle)):
         particle[i].draw()  # Draws particles updated location each frame
         particle[i].detect_window()  # Each frame checks if it leaves window bounds
         start_time = time.time()
-        for k in range(len(particle)-1):
+        for k in range(len(particle)):
             if k != i:  # Checks particle against every other particle for a collision and handles it
                 particle[i].collision_detection(particle[k])
         end_time = time.time()
